@@ -1,0 +1,177 @@
+{% extends "layout.html" %}
+
+{% block title %}Admin Dashboard - Startup Success{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-rocket"></i>
+            <h2>Startup Success</h2>
+        </div>
+        
+        <div class="user-info admin">
+            <i class="fas fa-user-shield user-avatar"></i>
+            <span>{{ username }}</span>
+            <span class="role-badge">Admin</span>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li class="active"><a href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a href="#users-section"><i class="fas fa-users"></i> Users</a></li>
+            <li><a href="#logs-section"><i class="fas fa-history"></i> Activity Logs</a></li>
+            <li><a href="#predictions-section"><i class="fas fa-chart-pie"></i> Predictions</a></li>
+            <li><a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </nav>
+
+    <main class="content">
+        <header class="content-header">
+            <h1><i class="fas fa-crown"></i> Admin Dashboard</h1>
+            <div class="user-controls">
+                <a href="/logout" class="btn-secondary">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </header>
+        
+        <div class="content-body">
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-data">
+                        <h3>Total Users</h3>
+                        <p>{{ users|length }}</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-data">
+                        <h3>Predictions</h3>
+                        <p>{{ predictions|length }}</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="stat-data">
+                        <h3>Activity Logs</h3>
+                        <p>{{ logs|length }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card" id="users-section">
+                <div class="card-header">
+                    <h2><i class="fas fa-users"></i> Registered Users</h2>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Created At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ user['id'] }}</td>
+                                    <td>{{ user['username'] }}</td>
+                                    <td>
+                                        <span class="badge {% if user['role'] == 'admin' %}badge-admin{% else %}badge-user{% endif %}">
+                                            {{ user['role'] }}
+                                        </span>
+                                    </td>
+                                    <td>{{ user['created_at'] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card" id="logs-section">
+                <div class="card-header">
+                    <h2><i class="fas fa-history"></i> Activity Logs</h2>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Action</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td>{{ log['id'] }}</td>
+                                    <td>{{ log['username'] }}</td>
+                                    <td>{{ log['action'] }}</td>
+                                    <td>{{ log['timestamp'] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card" id="predictions-section">
+                <div class="card-header">
+                    <h2><i class="fas fa-chart-pie"></i> Prediction History</h2>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Funding</th>
+                                    <th>Accelerator</th>
+                                    <th>Revenue</th>
+                                    <th>Prediction</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in predictions %}
+                                <tr>
+                                    <td>{{ p['id'] }}</td>
+                                    <td>{{ p['username'] }}</td>
+                                    <td>{{ "Yes" if p['funding'] == 1 else "No" }}</td>
+                                    <td>{{ "Yes" if p['accelerator'] == 1 else "No" }}</td>
+                                    <td>${{ p['revenue'] }}</td>
+                                    <td>
+                                        <span class="badge {% if p['prediction'] == 'Success' %}badge-success{% else %}badge-failure{% endif %}">
+                                            {{ p['prediction'] }}
+                                        </span>
+                                    </td>
+                                    <td>{{ p['timestamp'] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
