@@ -3,6 +3,32 @@
 {% block title %}Login - Startup Success Dashboard{% endblock %}
 
 {% block content %}
+
+<style>
+    /* Background only for login page */
+    body {
+        background-image: url("../static/images/background.jpg");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }
+
+    body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("../static/images/background.jpg");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    opacity: 0.5; /* Adjust the transparency level here */
+    z-index: -1; /* Makes sure the image stays behind other content */
+}
+</style>
+
 <div class="login-container">
     <div class="login-header">
         <div class="logo">

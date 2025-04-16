@@ -38,7 +38,7 @@
                     <h2><i class="fas fa-chart-bar"></i> Power BI Dashboard</h2>
                 </div>
                 <div class="card-body powerbi-container">
-                    <iframe width="100%" height="600" src="{{ powerbi_url }}" frameborder="0" allowfullscreen></iframe>
+                    <iframe title="DSBI_PowerBI" width="1140" height="541.25" src="https://app.powerbi.com/reportEmbed?reportId=497c6362-3338-4891-b858-e84419d7ce99&autoAuth=true&ctid=23035d1f-133c-44b5-b2ad-b3aef17baaa1" frameborder="0" allowFullScreen="true"></iframe>
                 </div>
             </div>
 
@@ -47,41 +47,85 @@
                     <h2><i class="fas fa-magic"></i> Predict Your Startup Success</h2>
                 </div>
                 <div class="card-body">
-                    <form method="post" action="/user">
+                    <form method="post" action="/predict">
+                        <!-- Funding Total -->
                         <div class="form-group">
                             <label for="funding">
                                 <i class="fas fa-money-bill"></i> Funding Status
                             </label>
-                            <select id="funding" name="funding" required>
-                                <option value="1">Received Funding</option>
-                                <option value="0">No Funding</option>
+                            <input type="number" id="funding" name="funding_total_usd" min="0" placeholder="Enter total funding (USD)" required>
+                        </div>
+            
+                        <!-- Country Dropdown -->
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-globe"></i> Country
+                            </label>
+                            <select name="country_code" required>
+                                <option value="">-- Select Country --</option>
+                                {% for code, val in [
+                                    ('ARE', 0), ('ARG', 1), ('AUS', 2), ('AUT', 3), ('BEL', 4), ('BGR', 5), ('BLM', 6), ('BLR', 7), ('BMU', 8), 
+                                    ('BRA', 9), ('CAN', 10), ('CHE', 11), ('CHL', 12), ('CHN', 13), ('COL', 14), ('CRI', 15), ('CZE', 16),
+                                    ('DEU', 17), ('DNK', 18), ('ESP', 19), ('EST', 20), ('FIN', 21), ('FRA', 22), ('GBR', 23), ('GHA', 24),
+                                    ('GRC', 25), ('GTM', 26), ('HKG', 27), ('HUN', 28), ('IDN', 29), ('IND', 30), ('IRL', 31), ('ISL', 32),
+                                    ('ISR', 33), ('ITA', 34), ('JOR', 35), ('JPN', 36), ('KOR', 37), ('LBN', 38), ('LIE', 39), ('LTU', 40),
+                                    ('LUX', 41), ('LVA', 42), ('MAF', 43), ('MEX', 44), ('MYS', 45), ('NGA', 46), ('NLD', 47), ('NOR', 48),
+                                    ('NZL', 49), ('PAK', 50), ('PER', 51), ('PHL', 52), ('POL', 53), ('PRI', 54), ('PRT', 55), ('ROM', 56),
+                                    ('RUS', 57), ('SAU', 58), ('SGP', 59), ('SLV', 60), ('SOM', 61), ('SVK', 62), ('SVN', 63), ('SWE', 64),
+                                    ('THA', 65), ('TUR', 66), ('TWN', 67), ('UGA', 68), ('UKR', 69), ('URY', 70), ('USA', 71), ('VNM', 72), ('ZAF', 73)
+                                ] %}
+                                    <option value="{{ val }}">{{ code }}</option>
+                                {% endfor %}
                             </select>
                         </div>
-                        
+            
+                        <!-- Funding Rounds -->
                         <div class="form-group">
-                            <label for="accelerator">
-                                <i class="fas fa-rocket"></i> Accelerator Program
+                            <label>
+                                <i class="fas fa-sync-alt"></i> Funding Rounds
                             </label>
-                            <select id="accelerator" name="accelerator" required>
-                                <option value="1">Participated</option>
-                                <option value="0">Did Not Participate</option>
-                            </select>
+                            <input type="number" name="funding_rounds" min="0" max="50" placeholder="Number of rounds" required>
                         </div>
-                        
+            
+                        <!-- Age at First Funding -->
                         <div class="form-group">
-                            <label for="revenue">
-                                <i class="fas fa-dollar-sign"></i> Annual Revenue ($)
+                            <label>
+                                <i class="fas fa-hourglass-start"></i> Age at First Funding
                             </label>
-                            <input type="number" id="revenue" name="revenue" min="0" max="10000000" placeholder="Enter annual revenue" required>
+                            <input type="number" name="age_at_first_funding" min="0" max="100" required>
                         </div>
-                        
+            
+                        <!-- Age at Last Funding -->
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-hourglass-end"></i> Age at Last Funding
+                            </label>
+                            <input type="number" name="age_at_last_funding" min="0" max="100" required>
+                        </div>
+            
+                        <!-- Categories -->
+                        <div class="form-group">
+                            <label><i class="fas fa-tags"></i> Categories</label>
+                            <div class="checkbox-group">
+                                {% for category in [
+                                    'Software', 'Biotechnology', 'Mobile', 'Curated Web', 'E-Commerce', 'Social Media', 'Advertising',
+                                    'Enterprise Software', 'Games', 'Health Care', 'Services', 'Internet', 'Technology', 'Finance',
+                                    'Analytics', 'Hardware + Software', 'Security', 'Clean Technology', 'Semiconductors', 'Apps',
+                                    'Health and Wellness', 'SaaS', 'Web Hosting', 'Video', 'Networking', 'Social Network Media'
+                                ] %}
+                                    <label><input type="checkbox" name="{{ category }}" value="1"> {{ category }}</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+            
+                        <!-- Submit Button -->
                         <div class="form-group">
                             <button type="submit" class="btn-primary">
                                 <i class="fas fa-crystal-ball"></i> Predict Success
                             </button>
                         </div>
                     </form>
-                    
+            
                     {% if prediction %}
                     <div class="prediction-result {% if prediction == 'Success' %}success{% elif prediction == 'Failure' %}failure{% else %}neutral{% endif %}">
                         <h3>
@@ -98,8 +142,9 @@
                     </div>
                     {% endif %}
                 </div>
-            </div>
+            </div>          
         </div>
     </main>
 </div>
+    
 {% endblock %}
