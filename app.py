@@ -5,19 +5,21 @@ import os
 import hashlib
 from datetime import datetime, timedelta
 import json
+import pandas as pd
+import joblib
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Generate a secure secret key
 app.permanent_session_lifetime = timedelta(minutes=30)  # Session timeout
 
 # Path configurations
-MODEL_PATH = 'model/model.pkl'
+MODEL_PATH = 'model/random_forest_model.pkl'
 DB_PATH = 'data/startup.db'
 POWERBI_PATH = 'powerbi_link.txt'
 
 # Load model if exists
 try:
-    model = pickle.load(open(MODEL_PATH, 'rb')) if os.path.exists(MODEL_PATH) else None
+    model = joblib.load(open(MODEL_PATH, 'rb')) if os.path.exists(MODEL_PATH) else None
     if model is None:
         print("Warning: ML model not found. Prediction functionality will be disabled.")
 except Exception as e:
@@ -89,50 +91,75 @@ def login():
     
     return render_template('login.html', error=error)
 
-@app.route('/user', methods=['GET', 'POST'])
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    if not is_logged_in('user'):
+        flash("Please log in to access this page", "error")
+        return redirect(url_for('login'))
+
+    if model is None:
+        session['prediction_result'] = "Model not available"
+        return redirect(url_for('user'))
+
+    try:
+        # Exact feature list from training
+        features = [
+            'funding_total_usd', 'country_code', 'funding_rounds',
+            'Software', 'Biotechnology', 'Mobile', 'Curated Web', 'E-Commerce',
+            'Social Media', 'Advertising', 'Enterprise Software', 'Games',
+            'Health Care', 'Services', 'Internet', 'Technology', 'Finance',
+            'Analytics', 'Hardware + Software', 'Security', 'Clean Technology',
+            'Semiconductors', 'Apps', 'Health and Wellness', 'SaaS',
+            'Web Hosting', 'Video', 'Networking', 'Social Network Media',
+            'age_at_first_funding', 'age_at_last_funding'
+        ]
+
+        # Build form data into dictionary
+        input_data = {feature: int(request.form.get(feature, 0)) for feature in features}
+        input_df = pd.DataFrame([input_data])[features]
+
+        # Predict
+        prediction = model.predict(input_df)
+        prediction_result = "Success" if prediction[0] == 1 else "Failure"
+
+        # Save to DB
+        with get_db_connection() as conn:
+            conn.execute(
+                "INSERT INTO predictions (username, funding, accelerator, revenue, prediction) VALUES (?, ?, ?, ?, ?)",
+                (session['username'], input_data['funding_total_usd'], None, None, prediction_result)
+            )
+            conn.commit()
+
+        log_action(session['username'], f"Made prediction: {prediction_result}")
+        session['prediction_result'] = prediction_result  # Pass back via session
+
+    except Exception as e:
+        session['prediction_result'] = f"Error: {str(e)}"
+
+    return redirect(url_for('user'))
+
+
+
+@app.route('/user', methods=['GET'])
 def user():
     if not is_logged_in('user'):
         flash("Please log in to access this page", "error")
         return redirect(url_for('login'))
 
-    prediction_result = None
-    
-    if request.method == 'POST':
-        if model:
-            # Get form data for prediction
-            funding = int(request.form.get('funding', 0))
-            accelerator = int(request.form.get('accelerator', 0))
-            revenue = int(request.form.get('revenue', 0))
-            
-            # Make prediction
-            try:
-                input_data = [funding, accelerator, revenue]
-                prediction = model.predict([input_data])[0]
-                prediction_result = "Success" if prediction == 1 else "Failure"
-                
-                # Save prediction to database
-                with get_db_connection() as conn:
-                    conn.execute(
-                        "INSERT INTO predictions (username, funding, accelerator, revenue, prediction) VALUES (?, ?, ?, ?, ?)",
-                        (session['username'], funding, accelerator, revenue, prediction_result)
-                    )
-                    conn.commit()
-                
-                log_action(session['username'], f"Made prediction: {prediction_result}")
-                
-            except Exception as e:
-                prediction_result = f"Error: {str(e)}"
-        else:
-            prediction_result = "Model not available"
-    
+    prediction_result = session.pop('prediction_result', None)  # Get prediction result once
+
     powerbi_url = get_powerbi_url()
-    
+
     return render_template(
-        'user.html', 
+        'user.html',
         username=session['username'],
         powerbi_url=powerbi_url,
         prediction=prediction_result
     )
+
+
+
 
 @app.route('/admin')
 def admin():
