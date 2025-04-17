@@ -120,7 +120,7 @@
             
                         <!-- Submit Button -->
                         <div class="form-group">
-                            <button type="submit" class="btn-primary">
+                            <button type="submit" class="btn-primary" id="predict-button">
                                 <i class="fas fa-crystal-ball"></i> Predict Success
                             </button>
                         </div>
@@ -147,4 +147,60 @@
     </main>
 </div>
     
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('#prediction-form form');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent the default form submission
+            
+            const button = document.getElementById('predict-button');
+            const originalButtonText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            button.disabled = true;
+
+            const formData = new FormData(form);
+
+            fetch('/predict', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                let resultElement = document.querySelector('.prediction-result');
+                if (!resultElement) {
+                    resultElement = document.createElement('div');
+                    resultElement.className = 'prediction-result';
+                    form.insertAdjacentElement('afterend', resultElement);
+                }
+
+                resultElement.className = 'prediction-result';
+                if (data.prediction === 'Success') {
+                    resultElement.classList.add('success');
+                    resultElement.innerHTML = '<h3><i class="fas fa-check-circle"></i> Prediction Result</h3>';
+                } else if (data.prediction === 'Failure') {
+                    resultElement.classList.add('failure');
+                    resultElement.innerHTML = '<h3><i class="fas fa-times-circle"></i> Prediction Result</h3>';
+                } else {
+                    resultElement.classList.add('neutral');
+                    resultElement.innerHTML = '<h3><i class="fas fa-exclamation-circle"></i> Prediction Result</h3>';
+                }
+
+                resultElement.innerHTML += `<p>${data.prediction}</p>`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while processing your request.');
+            })
+            .finally(() => {
+                button.innerHTML = originalButtonText;
+                button.disabled = false;
+            });
+        });
+    });
+    </script>
+
 {% endblock %}

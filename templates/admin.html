@@ -143,6 +143,9 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Username</th>
+                                    <th>Funding</th>
+                                    <th>Accelerator</th>
+                                    <th>Revenue</th>
                                     <th>Prediction</th>
                                     <th>Timestamp</th>
                                 </tr>
@@ -152,6 +155,9 @@
                                 <tr>
                                     <td>{{ p['id'] }}</td>
                                     <td>{{ p['username'] }}</td>
+                                    <td>{{ "Yes" if p['funding'] == 1 else "No" }}</td>
+                                    <td>{{ "Yes" if p['accelerator'] == 1 else "No" }}</td>
+                                    <td>${{ p['revenue'] }}</td>
                                     <td>
                                         <span class="badge {% if p['prediction'] == 'Success' %}badge-success{% else %}badge-failure{% endif %}">
                                             {{ p['prediction'] }}

@@ -95,11 +95,16 @@ def login():
 @app.route('/predict', methods=['POST'])
 def predict():
     if not is_logged_in('user'):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return {"success": False, "prediction": "Not logged in"}, 401
         flash("Please log in to access this page", "error")
         return redirect(url_for('login'))
 
     if model is None:
-        session['prediction_result'] = "Model not available"
+        prediction_result = "Model not available"
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return {"success": False, "prediction": prediction_result}
+        session['prediction_result'] = prediction_result
         return redirect(url_for('user'))
 
     try:
@@ -132,12 +137,21 @@ def predict():
             conn.commit()
 
         log_action(session['username'], f"Made prediction: {prediction_result}")
-        session['prediction_result'] = prediction_result  # Pass back via session
+        
+        # Return JSON response for AJAX requests
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return {"success": True, "prediction": prediction_result}
+            
+        # Otherwise handle as before for non-AJAX requests
+        session['prediction_result'] = prediction_result
+        return redirect(url_for('user'))
 
     except Exception as e:
-        session['prediction_result'] = f"Error: {str(e)}"
-
-    return redirect(url_for('user'))
+        error_message = f"Error: {str(e)}"
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return {"success": False, "prediction": error_message}
+        session['prediction_result'] = error_message
+        return redirect(url_for('user'))
 
 
 
